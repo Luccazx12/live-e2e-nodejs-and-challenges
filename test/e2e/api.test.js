@@ -1,40 +1,42 @@
-import {
-  jest,
-  expect,
-  test,
-  describe,
-} from '@jest/globals'
+import { jest, expect, test, describe, afterEach } from "@jest/globals";
+import supertest from "supertest";
+import Server from "../../src/server.js";
+import { Database } from "../../src/database.js";
 
-import superTest from 'supertest'
-import Server from '../../src/server.js'
-//  flaky
-/*
-DESAFIO PARA QUEM ASSISTIU:
+describe("API E2E Test Suite", () => {
+  // Limpando o banco de dados após cada teste
+  afterEach(() => {
+    Database.clear();
+  });
 
-Fazer com que Rodar o POST primeiro, não suge o GET
-https://youtu.be/hQB139HP3GE
-*/
-describe('API E2E Test Suite', () => {
-  
-  test('POST /  - should save an item and return ok', async () => {
-    const response = await superTest(Server)
-      .post('/')
-      .send({
-        nome: 'erickwendel',
-        age: 27
-      })
-    const expectedResponse = { ok:  1}
-    expect(JSON.parse(response.text)).toStrictEqual(expectedResponse)
-  })
+  test("POST / = should save an item an return ok", async () => {
+    const response = await supertest(Server).post("/").send({
+      nome: "Lucca",
+      age: 19,
+    });
 
-  test('GET /  - should return an array', async () => {
-    const response = await superTest(Server)
-      .get('/')
+    const expectedResponse = { ok: 1 };
+    expect(JSON.parse(response.text)).toStrictEqual(expectedResponse);
+  });
 
-    const data = JSON.parse(response.text)
-    expect(data).toBeInstanceOf(Array)
-    expect(data.length).toEqual(0)
-  })
+  test("GET / = should return an array", async () => {
+    const response = await supertest(Server).get("/");
 
-  test.todo('DELETE /  - should save an item and return ok')
-})
+    const data = JSON.parse(response.text);
+    expect(data).toBeInstanceOf(Array);
+    expect(data.length).toEqual(0);
+  });
+
+  test("Delete / = should delete all database and return ok", async () => {
+    // Apagando o banco de dados e verificando retorno da API
+    const responseDelete = await supertest(Server).delete("/");
+    const expectedResponse = { ok: 1 };
+    expect(JSON.parse(responseDelete.text)).toStrictEqual(expectedResponse);
+
+    // Verificando se o 'banco de dados' foi completamente apagado.
+    const responseGet = await supertest(Server).get("/");
+    const data = JSON.parse(responseGet.text);
+    expect(data).toBeInstanceOf(Array);
+    expect(data.length).toEqual(0);
+  });
+});
